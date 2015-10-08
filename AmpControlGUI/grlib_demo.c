@@ -1,27 +1,3 @@
-//*****************************************************************************
-//
-// grlib_demo.c - Demonstration of the Stellaris Graphics Library.
-//
-// Copyright (c) 2008-2010 Texas Instruments Incorporated.  All rights reserved.
-// Software License Agreement
-// 
-// Texas Instruments (TI) is supplying this software for use solely and
-// exclusively on TI's microcontroller products. The software is owned by
-// TI and/or its suppliers, and is protected under applicable copyright
-// laws. You may not combine this software with "viral" open-source
-// software in order to form a larger program.
-// 
-// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
-// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
-// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
-// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
-// DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
-// This is part of revision 6075 of the DK-LM3S9B96 Firmware Package.
-//
-//*****************************************************************************
-
 #include "stdint.h"
 #include "stdbool.h"
 #include "time.h"
@@ -92,19 +68,39 @@ extern tCanvasWidget g_psPanels[];
 //*****************************************************************************
 #define TONAL_CONTROL_RANGE 64
 #define VOLUME_CONTROL_RANGE 100
-int32_t TWEETER = TONAL_CONTROL_RANGE/2;
-int32_t MIDRANGE = TONAL_CONTROL_RANGE/2;
-int32_t BASS = TONAL_CONTROL_RANGE/2;
-int32_t VOLUME = VOLUME_CONTROL_RANGE/2;
+int32_t TWEETER = 32;
+int32_t MIDRANGE = 32;
+int32_t BASS = 32;
+int32_t VOLUME = 50;
 
 //*****************************************************************************
 //
 // Selection of push buttons.
 //
 //*****************************************************************************
+
 tCanvasWidget g_psPushButtonIndicators[] =
 {
-    CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 1, 0,
+
+	CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 1, 0,
+				 &g_sKentec320x240x16_SSD2119, 88, 35, 150, 24,
+				 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "Tonal Presets",
+				 0, 0),
+	CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 2, 0,
+				 &g_sKentec320x240x16_SSD2119, 190, 55, 110, 24,
+				 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "",
+				 0, 0),
+
+	CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 3, 0,
+				 &g_sKentec320x240x16_SSD2119, 30, 140, 110, 24,
+				 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "Temperature",
+				 0, 0),
+	CanvasStruct(g_psPanels + 0, 0, 0,
+				 &g_sKentec320x240x16_SSD2119, 28, 155, 110, 50,
+				 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "0 Celsius",
+				 0, 0),
+/*
+	CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 1, 0,
                  &g_sKentec320x240x16_SSD2119, 40, 85, 20, 20,
                  CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),
     CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 2, 0,
@@ -121,59 +117,37 @@ tCanvasWidget g_psPushButtonIndicators[] =
                  CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),
     CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 6, 0,
                  &g_sKentec320x240x16_SSD2119, 145, 165, 20, 20,
-                 CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),
-    CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 7, 0,
-                 &g_sKentec320x240x16_SSD2119, 190, 35, 110, 24,
-                 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "Non-auto",
-                 0, 0),
-    CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 8, 0,
-                 &g_sKentec320x240x16_SSD2119, 190, 55, 110, 24,
-                 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "repeat",
-                 0, 0),
-    CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 9, 0,
-                 &g_sKentec320x240x16_SSD2119, 190, 115, 110, 24,
-                 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "Auto",
-                 0, 0),
-    CanvasStruct(g_psPanels + 0, 0, 0,
-                 &g_sKentec320x240x16_SSD2119, 190, 135, 110, 24,
-                 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "repeat",
-                 0, 0),
+                 CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),*/
 };
 tPushButtonWidget g_psPushButtons[] =
 {
+
     RectangularButtonStruct(g_psPanels + 0, g_psPushButtons + 1, 0,
-                            &g_sKentec320x240x16_SSD2119, 30, 35, 40, 40,
+                            &g_sKentec320x240x16_SSD2119, 30, 70, 130, 25,
                             PB_STYLE_FILL | PB_STYLE_OUTLINE | PB_STYLE_TEXT,
                             ClrMidnightBlue, ClrBlack, ClrGray, ClrSilver,
-                            &g_sFontCm22, "1", 0, 0, 0, 0, OnButtonPress),
-    CircularButtonStruct(g_psPanels + 0, g_psPushButtons + 2, 0,
-                         &g_sKentec320x240x16_SSD2119, 100, 55, 20,
-                         PB_STYLE_FILL | PB_STYLE_OUTLINE | PB_STYLE_TEXT,
-                         ClrMidnightBlue, ClrBlack, ClrGray, ClrSilver,
-                         &g_sFontCm22, "3", 0, 0, 0, 0, OnButtonPress),
-    RectangularButtonStruct(g_psPanels + 0, g_psPushButtons + 3, 0,
-                            &g_sKentec320x240x16_SSD2119, 130, 30, 50, 50,
-                            PB_STYLE_IMG | PB_STYLE_TEXT, 0, 0, 0, ClrSilver,
-                            &g_sFontCm22, "5", g_pucBlue50x50,
-                            g_pucBlue50x50Press, 0, 0, OnButtonPress),
-    RectangularButtonStruct(g_psPanels + 0, g_psPushButtons + 4, 0,
-                            &g_sKentec320x240x16_SSD2119, 30, 115, 40, 40,
-                            (PB_STYLE_FILL | PB_STYLE_OUTLINE | PB_STYLE_TEXT |
-                             PB_STYLE_AUTO_REPEAT), ClrMidnightBlue, ClrBlack,
-                            ClrGray, ClrSilver, &g_sFontCm22, "2", 0, 0, 125,
-                            25, OnButtonPress),
-    CircularButtonStruct(g_psPanels + 0, g_psPushButtons + 5, 0,
-                         &g_sKentec320x240x16_SSD2119, 100, 135, 20,
-                         (PB_STYLE_FILL | PB_STYLE_OUTLINE | PB_STYLE_TEXT |
-                          PB_STYLE_AUTO_REPEAT), ClrMidnightBlue, ClrBlack,
-                         ClrGray, ClrSilver, &g_sFontCm22, "4", 0, 0, 125, 25,
-                         OnButtonPress),
-    RectangularButtonStruct(g_psPanels + 0, g_psPushButtonIndicators, 0,
-                            &g_sKentec320x240x16_SSD2119, 130, 110, 50, 50,
-                            (PB_STYLE_IMG | PB_STYLE_TEXT |
-                             PB_STYLE_AUTO_REPEAT), 0, 0, 0, ClrSilver,
-                            &g_sFontCm22, "6", g_pucBlue50x50,
-                            g_pucBlue50x50Press, 125, 25, OnButtonPress),
+                            &g_sFontCm22, "Pop", 0, 0, 0, 0, OnButtonPress),
+	RectangularButtonStruct(g_psPanels + 0, g_psPushButtons + 2, 0,
+							&g_sKentec320x240x16_SSD2119, 30, 100, 130, 25,
+							PB_STYLE_FILL | PB_STYLE_OUTLINE | PB_STYLE_TEXT,
+							ClrMidnightBlue, ClrBlack, ClrGray, ClrSilver,
+							&g_sFontCm22, "Jazz", 0, 0, 0, 0, OnButtonPress),
+	RectangularButtonStruct(g_psPanels + 0, g_psPushButtons + 3, 0,
+							&g_sKentec320x240x16_SSD2119, 170, 70, 120, 25,
+							PB_STYLE_FILL | PB_STYLE_OUTLINE | PB_STYLE_TEXT,
+							ClrMidnightBlue, ClrBlack, ClrGray, ClrSilver,
+							&g_sFontCm22, "Rock", 0, 0, 0, 0, OnButtonPress),
+	RectangularButtonStruct(g_psPanels + 0, g_psPushButtons + 4, 0,
+							&g_sKentec320x240x16_SSD2119, 170, 100, 120, 25,
+							PB_STYLE_FILL | PB_STYLE_OUTLINE | PB_STYLE_TEXT,
+							ClrMidnightBlue, ClrBlack, ClrGray, ClrSilver,
+							&g_sFontCm22, "Drum+Bass", 0, 0, 0, 0, OnButtonPress),
+	CircularButtonStruct(g_psPanels + 0, g_psPushButtonIndicators, 0,
+							 &g_sKentec320x240x16_SSD2119, 240, 170, 30,
+							 (PB_STYLE_FILL | PB_STYLE_OUTLINE | PB_STYLE_TEXT |
+							  PB_STYLE_AUTO_REPEAT), ClrDarkRed, ClrBlack,
+							 ClrGray, ClrSilver, &g_sFontCm22, "Reset", 0, 0, 125, 25,
+							 OnButtonPress),
 };
 #define NUM_PUSH_BUTTONS        (sizeof(g_psPushButtons) /   \
                                  sizeof(g_psPushButtons[0]))
@@ -193,27 +167,27 @@ Canvas(g_sSliderValueCanvas, g_psPanels + 1, 0, 0,
 tSliderWidget g_psSliders[] =
 {
     SliderStruct(g_psPanels + 1, g_psSliders + 1, 0,
-                 &g_sKentec320x240x16_SSD2119, 10, 40, 220, 30, 0, TONAL_CONTROL_RANGE, 32,
+                 &g_sKentec320x240x16_SSD2119, 10, 40, 220, 25, 0, TONAL_CONTROL_RANGE, 32,
                  (SL_STYLE_FILL | SL_STYLE_BACKG_FILL | SL_STYLE_OUTLINE |
                   SL_STYLE_TEXT | SL_STYLE_BACKG_TEXT),
                  ClrGray, ClrBlack, ClrSilver, ClrWhite, ClrWhite,
                  &g_sFontCm20, "Tweeter", 0, 0, OnSliderChange),
 	SliderStruct(g_psPanels + 1, g_psSliders + 2, 0,
-				 &g_sKentec320x240x16_SSD2119, 10, 80, 220, 30, 0, TONAL_CONTROL_RANGE, 32,
+				 &g_sKentec320x240x16_SSD2119, 10, 80, 220, 25, 0, TONAL_CONTROL_RANGE, 32,
 				 (SL_STYLE_FILL | SL_STYLE_BACKG_FILL | SL_STYLE_OUTLINE |
 				  SL_STYLE_TEXT | SL_STYLE_BACKG_TEXT),
 				 ClrGray, ClrBlack, ClrSilver, ClrWhite, ClrWhite,
 				 &g_sFontCm20, "Mid Range", 0, 0, OnSliderChange),
 	SliderStruct(g_psPanels + 1, g_psSliders + 3, 0,
-				 &g_sKentec320x240x16_SSD2119, 10, 120, 220, 30, 0, TONAL_CONTROL_RANGE, 32,
+				 &g_sKentec320x240x16_SSD2119, 10, 120, 220, 25, 0, TONAL_CONTROL_RANGE, 32,
 				 (SL_STYLE_FILL | SL_STYLE_BACKG_FILL | SL_STYLE_OUTLINE |
 				  SL_STYLE_TEXT | SL_STYLE_BACKG_TEXT),
 				 ClrGray, ClrBlack, ClrSilver, ClrWhite, ClrWhite,
 				 &g_sFontCm20, "Bass", 0, 0, OnSliderChange),
 	SliderStruct(g_psPanels + 1, g_psSliders + 4, 0,
-				 &g_sKentec320x240x16_SSD2119, 280, 40, 30, 150, 0, 100, 75,
+				 &g_sKentec320x240x16_SSD2119, 260, 40, 30, 150, 0, 100, 25,
 				 (SL_STYLE_IMG | SL_STYLE_BACKG_IMG | SL_STYLE_VERTICAL |
-				 SL_STYLE_OUTLINE), 0, ClrBlack, ClrSilver, 0, 0, 0,
+				 SL_STYLE_OUTLINE | SL_STYLE_LOCKED), 0, ClrBlack, ClrSilver, 0, 0, 0,
 				 0, g_pucGettingHotter28x148, g_pucGettingHotter28x148Mono,
 				 OnSliderChange),
 	 SliderStruct(g_psPanels + 1, &g_sSliderValueCanvas, 0,
@@ -269,8 +243,8 @@ char *g_pcPanelNames[] =
 // The buttons and text across the bottom of the screen.
 //
 //*****************************************************************************
-RectangularButton(g_sPrevious, 0, 0, 0, &g_sKentec320x240x16_SSD2119, 0, 190,
-                  50, 50, PB_STYLE_FILL, ClrBlack, ClrBlack, 0, ClrSilver,
+RectangularButton(g_sPrevious, 0, 0, 0, &g_sKentec320x240x16_SSD2119, 0, 210,
+                  40, 30, PB_STYLE_FILL, ClrBlack, ClrBlack, 0, ClrSilver,
                   &g_sFontCm20, "-", g_pucBlue50x50, g_pucBlue50x50Press, 0, 0,
                   OnPrevious);
                   
@@ -278,8 +252,8 @@ Canvas(g_sTitle, 0, 0, 0, &g_sKentec320x240x16_SSD2119, 50, 190, 220, 50,
        CANVAS_STYLE_TEXT | CANVAS_STYLE_TEXT_OPAQUE, 0, 0, ClrSilver,
        &g_sFontCm20, 0, 0, 0);
        
-RectangularButton(g_sNext, 0, 0, 0, &g_sKentec320x240x16_SSD2119, 270, 190,
-                  50, 50, PB_STYLE_IMG | PB_STYLE_TEXT, ClrBlack, ClrBlack, 0,
+RectangularButton(g_sNext, 0, 0, 0, &g_sKentec320x240x16_SSD2119, 270, 210,
+                  40, 30, PB_STYLE_IMG | PB_STYLE_TEXT, ClrBlack, ClrBlack, 0,
                   ClrSilver, &g_sFontCm20, "+", g_pucBlue50x50,
                   g_pucBlue50x50Press, 0, 0, OnNext);
 
@@ -461,6 +435,7 @@ OnButtonPress(tWidget *pWidget)
         return;
     }
 
+    /*
     //
     // Toggle the state of this push button indicator.
     //
@@ -473,7 +448,7 @@ OnButtonPress(tWidget *pWidget)
                    (g_ulButtonState & (1 << ulIdx)) ? g_pucLightOn :
                    g_pucLightOff);
     WidgetPaint((tWidget *)(g_psPushButtonIndicators + ulIdx));
-
+*/
 }
 
 //*****************************************************************************
