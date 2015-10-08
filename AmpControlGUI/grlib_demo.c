@@ -81,23 +81,25 @@ void OnCheckChange(tWidget *pWidget, uint32_t bSelected);
 void OnButtonPress(tWidget *pWidget);
 void OnRadioChange(tWidget *pWidget, uint32_t bSelected);
 void OnSliderChange(tWidget *pWidget, int32_t lValue);
+void UpdatePots(int32_t id, int32_t value); // add declaration
 extern tCanvasWidget g_psPanels[];
 
-//*****************************************************************************
-//
-// The first panel, which contains introductory text explaining the
-// application.
-//
-//*****************************************************************************
-Canvas(g_sIntroduction, g_psPanels, 0, 0, &g_sKentec320x240x16_SSD2119, 0, 24,
-       320, 166, CANVAS_STYLE_APP_DRAWN, 0, 0, 0, 0, 0, 0, OnIntroPaint);
-
-
-
 
 //*****************************************************************************
 //
-// The sixth panel, which contains a selection of push buttons.
+// Potentiometer Global Variables
+//
+//*****************************************************************************
+#define TONAL_CONTROL_RANGE 64
+#define VOLUME_CONTROL_RANGE 100
+int32_t TWEETER = TONAL_CONTROL_RANGE/2;
+int32_t MIDRANGE = TONAL_CONTROL_RANGE/2;
+int32_t BASS = TONAL_CONTROL_RANGE/2;
+int32_t VOLUME = VOLUME_CONTROL_RANGE/2;
+
+//*****************************************************************************
+//
+// Selection of push buttons.
 //
 //*****************************************************************************
 tCanvasWidget g_psPushButtonIndicators[] =
@@ -180,7 +182,7 @@ uint32_t g_ulButtonState;
 
 //*****************************************************************************
 //
-// The eighth panel, which demonstrates the slider widget.
+// Sliders for Potentiometer Control
 //
 //*****************************************************************************
 Canvas(g_sSliderValueCanvas, g_psPanels + 1, 0, 0,
@@ -191,19 +193,19 @@ Canvas(g_sSliderValueCanvas, g_psPanels + 1, 0, 0,
 tSliderWidget g_psSliders[] =
 {
     SliderStruct(g_psPanels + 1, g_psSliders + 1, 0,
-                 &g_sKentec320x240x16_SSD2119, 10, 40, 220, 30, 0, 100, 25,
+                 &g_sKentec320x240x16_SSD2119, 10, 40, 220, 30, 0, TONAL_CONTROL_RANGE, 32,
                  (SL_STYLE_FILL | SL_STYLE_BACKG_FILL | SL_STYLE_OUTLINE |
                   SL_STYLE_TEXT | SL_STYLE_BACKG_TEXT),
                  ClrGray, ClrBlack, ClrSilver, ClrWhite, ClrWhite,
                  &g_sFontCm20, "Tweeter", 0, 0, OnSliderChange),
 	SliderStruct(g_psPanels + 1, g_psSliders + 2, 0,
-				 &g_sKentec320x240x16_SSD2119, 10, 80, 220, 30, 0, 100, 25,
+				 &g_sKentec320x240x16_SSD2119, 10, 80, 220, 30, 0, TONAL_CONTROL_RANGE, 32,
 				 (SL_STYLE_FILL | SL_STYLE_BACKG_FILL | SL_STYLE_OUTLINE |
 				  SL_STYLE_TEXT | SL_STYLE_BACKG_TEXT),
 				 ClrGray, ClrBlack, ClrSilver, ClrWhite, ClrWhite,
 				 &g_sFontCm20, "Mid Range", 0, 0, OnSliderChange),
 	SliderStruct(g_psPanels + 1, g_psSliders + 3, 0,
-				 &g_sKentec320x240x16_SSD2119, 10, 120, 220, 30, 0, 100, 25,
+				 &g_sKentec320x240x16_SSD2119, 10, 120, 220, 30, 0, TONAL_CONTROL_RANGE, 32,
 				 (SL_STYLE_FILL | SL_STYLE_BACKG_FILL | SL_STYLE_OUTLINE |
 				  SL_STYLE_TEXT | SL_STYLE_BACKG_TEXT),
 				 ClrGray, ClrBlack, ClrSilver, ClrWhite, ClrWhite,
@@ -215,7 +217,7 @@ tSliderWidget g_psSliders[] =
 				 0, g_pucGettingHotter28x148, g_pucGettingHotter28x148Mono,
 				 OnSliderChange),
 	 SliderStruct(g_psPanels + 1, &g_sSliderValueCanvas, 0,
-				 &g_sKentec320x240x16_SSD2119, 10, 160, 220, 30, 0, 100, 25,
+				 &g_sKentec320x240x16_SSD2119, 10, 160, 220, 30, 0, VOLUME_CONTROL_RANGE, 50,
 				 (SL_STYLE_FILL | SL_STYLE_BACKG_FILL | SL_STYLE_OUTLINE |
 				  SL_STYLE_TEXT | SL_STYLE_BACKG_TEXT),
 				  ClrDarkRed, ClrBlack, ClrSilver, ClrWhite, ClrWhite,
@@ -258,15 +260,8 @@ tCanvasWidget g_psPanels[] =
 //*****************************************************************************
 char *g_pcPanelNames[] =
 {
-    "     Introduction     ",
-    "     Primitives     ",
-    "     Canvas     ",
-    "     Checkbox     ",
-    "     Container     ",
-    "     Push Buttons     ",
-    "     Radio Buttons     ",
-    "     Sliders     ",
-    "     S/W Update    "
+    "     Settings     ",
+    "     Amplifier Controls    "
 };
 
 //*****************************************************************************
@@ -489,41 +484,61 @@ OnButtonPress(tWidget *pWidget)
 void
 OnSliderChange(tWidget *pWidget, int32_t lValue)
 {
+
+	if(pWidget == (tWidget *)&g_psSliders[0]) // Tweeter
+	{
+		UpdatePots(0, lValue);
+	}
+
+	if(pWidget == (tWidget *)&g_psSliders[1]) // Midrange
+	{
+		UpdatePots(1, lValue);
+	}
+
+	if(pWidget == (tWidget *)&g_psSliders[2]) // Bass
+	{
+		UpdatePots(2, lValue);
+	}
+
+	if(pWidget == (tWidget *)&g_psSliders[4]) // Volume Control
+	{
+		UpdatePots(3, lValue);
+	}
+
+
 	/*
     static char pcCanvasText[5];
     static char pcSliderText[5];
-
-    //
-    // Is this the widget whose value we mirror in the canvas widget and the
-    // locked slider?
-    //
-    if(pWidget == (tWidget *)&g_psSliders[SLIDER_CANVAS_VAL_INDEX])
-    {
-        //
-        // Yes - update the canvas to show the slider value.
-        //
-        usprintf(pcCanvasText, "%3d%%", lValue);
-        CanvasTextSet(&g_sSliderValueCanvas, pcCanvasText);
-        WidgetPaint((tWidget *)&g_sSliderValueCanvas);
-
-        //
-        // Also update the value of the locked slider to reflect this one.
-        //
-        SliderValueSet(&g_psSliders[SLIDER_LOCKED_INDEX], lValue);
-        WidgetPaint((tWidget *)&g_psSliders[SLIDER_LOCKED_INDEX]);
-    }
-
-    if(pWidget == (tWidget *)&g_psSliders[SLIDER_TEXT_VAL_INDEX])
-    {
-        //
-        // Yes - update the canvas to show the slider value.
-        //
-        usprintf(pcSliderText, "%3d%%", lValue);
-        SliderTextSet(&g_psSliders[SLIDER_TEXT_VAL_INDEX], pcSliderText);
-        WidgetPaint((tWidget *)&g_psSliders[SLIDER_TEXT_VAL_INDEX]);
-    }
-    */
+	*/
 }
+
+//*****************************************************************************
+//
+// Passes the Slider Values to SPI Bus
+//
+//*****************************************************************************
+
+void
+UpdatePots(int32_t id, int32_t value)
+{
+	if(id == 0)
+	{
+		TWEETER = value;
+	}
+	if(id == 1)
+	{
+		MIDRANGE = value;
+	}
+	if(id == 2)
+	{
+		BASS = value;
+	}
+	if(id == 3)
+	{
+		VOLUME = value;
+	}
+}
+
 
 
 //*****************************************************************************
