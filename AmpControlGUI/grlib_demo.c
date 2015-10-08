@@ -58,6 +58,7 @@ void OnButtonPress(tWidget *pWidget);
 void OnRadioChange(tWidget *pWidget, uint32_t bSelected);
 void OnSliderChange(tWidget *pWidget, int32_t lValue);
 void UpdatePots(int32_t id, int32_t value); // add declaration
+void Reset();
 extern tCanvasWidget g_psPanels[];
 
 
@@ -143,11 +144,11 @@ tPushButtonWidget g_psPushButtons[] =
 							ClrMidnightBlue, ClrBlack, ClrGray, ClrSilver,
 							&g_sFontCm22, "Drum+Bass", 0, 0, 0, 0, OnButtonPress),
 	CircularButtonStruct(g_psPanels + 0, g_psPushButtonIndicators, 0,
-							 &g_sKentec320x240x16_SSD2119, 240, 170, 30,
+							 &g_sKentec320x240x16_SSD2119, 240, 163, 27,
 							 (PB_STYLE_FILL | PB_STYLE_OUTLINE | PB_STYLE_TEXT |
 							  PB_STYLE_AUTO_REPEAT), ClrDarkRed, ClrBlack,
 							 ClrGray, ClrSilver, &g_sFontCm22, "Reset", 0, 0, 125, 25,
-							 OnButtonPress),
+							 Reset),
 };
 #define NUM_PUSH_BUTTONS        (sizeof(g_psPushButtons) /   \
                                  sizeof(g_psPushButtons[0]))
@@ -160,7 +161,7 @@ uint32_t g_ulButtonState;
 //
 //*****************************************************************************
 Canvas(g_sSliderValueCanvas, g_psPanels + 1, 0, 0,
-       &g_sKentec320x240x16_SSD2119, 210, 30, 60, 40,
+       &g_sKentec320x240x16_SSD2119, 0, 0, 200, 200,
        CANVAS_STYLE_TEXT | CANVAS_STYLE_TEXT_OPAQUE, ClrBlack, 0, ClrSilver,
        &g_sFontCm24, "", 0, 0);
 
@@ -235,7 +236,7 @@ tCanvasWidget g_psPanels[] =
 char *g_pcPanelNames[] =
 {
     "     Settings     ",
-    "     Amplifier Controls    "
+    "     Amp Controls    "
 };
 
 //*****************************************************************************
@@ -434,21 +435,44 @@ OnButtonPress(tWidget *pWidget)
     {
         return;
     }
+    OnNext(pWidget);
+    if(pWidget == (tWidget *)&g_psPushButtons[0]) // Pop
+    {
+    	g_psSliders[0].i32Value = 55;
+    	g_psSliders[1].i32Value = 45;
+    	g_psSliders[2].i32Value = 30;
+    	TWEETER = 55;
+		MIDRANGE = 45;
+    	BASS = 30;
+    }
+    if(pWidget == (tWidget *)&g_psPushButtons[1]) // Jazz
+    {
+    	g_psSliders[0].i32Value = 25;
+    	g_psSliders[1].i32Value = 40;
+    	g_psSliders[2].i32Value = 30;
+    	TWEETER = 25;
+		MIDRANGE = 40;
+    	BASS = 30;
+    }
+    if(pWidget == (tWidget *)&g_psPushButtons[2]) // Rock
+    {
+    	g_psSliders[0].i32Value = 35;
+    	g_psSliders[1].i32Value = 40;
+    	g_psSliders[2].i32Value = 35;
+    	TWEETER = 35;
+		MIDRANGE = 40;
+    	BASS = 35;
+    }
+    if(pWidget == (tWidget *)&g_psPushButtons[3]) // Drum + Bass
+    {
+    	g_psSliders[0].i32Value = 37;
+    	g_psSliders[1].i32Value = 37;
+    	g_psSliders[2].i32Value = 50;
+    	TWEETER = 37;
+		MIDRANGE = 37;
+    	BASS = 50;
+    }
 
-    /*
-    //
-    // Toggle the state of this push button indicator.
-    //
-    g_ulButtonState ^= 1 << ulIdx;
-
-    //
-    // Set the matching indicator based on the selected state of the check box.
-    //
-    CanvasImageSet(g_psPushButtonIndicators + ulIdx,
-                   (g_ulButtonState & (1 << ulIdx)) ? g_pucLightOn :
-                   g_pucLightOff);
-    WidgetPaint((tWidget *)(g_psPushButtonIndicators + ulIdx));
-*/
 }
 
 //*****************************************************************************
@@ -462,22 +486,22 @@ OnSliderChange(tWidget *pWidget, int32_t lValue)
 
 	if(pWidget == (tWidget *)&g_psSliders[0]) // Tweeter
 	{
-		UpdatePots(0, lValue);
+		TWEETER = lValue;
 	}
 
 	if(pWidget == (tWidget *)&g_psSliders[1]) // Midrange
 	{
-		UpdatePots(1, lValue);
+		MIDRANGE = lValue;
 	}
 
 	if(pWidget == (tWidget *)&g_psSliders[2]) // Bass
 	{
-		UpdatePots(2, lValue);
+		BASS = lValue;
 	}
 
 	if(pWidget == (tWidget *)&g_psSliders[4]) // Volume Control
 	{
-		UpdatePots(3, lValue);
+		VOLUME = lValue;
 	}
 
 
@@ -496,6 +520,7 @@ OnSliderChange(tWidget *pWidget, int32_t lValue)
 void
 UpdatePots(int32_t id, int32_t value)
 {
+	/*
 	if(id == 0)
 	{
 		TWEETER = value;
@@ -512,6 +537,32 @@ UpdatePots(int32_t id, int32_t value)
 	{
 		VOLUME = value;
 	}
+	*/
+}
+
+
+
+//*****************************************************************************
+//
+// Reset Function (Currently just blinks onboard LED)
+//
+//*****************************************************************************
+
+bool g_RedLedOn = false;
+
+void
+Reset()
+{
+    g_RedLedOn = !g_RedLedOn;
+
+    if(g_RedLedOn)
+    {
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x02);
+    }
+    else
+    {
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x00);
+    }
 }
 
 
@@ -545,6 +596,11 @@ main(void)
     //
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ |
                        SYSCTL_OSC_MAIN);
+
+    // Reset Button Bindings
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+        GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0x00);
 
     //
     // Initialize the display driver.
