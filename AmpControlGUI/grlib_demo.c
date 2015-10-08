@@ -1,5 +1,6 @@
 #include "stdint.h"
 #include "stdbool.h"
+#include "stdlib.h"
 #include "time.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_nvic.h"
@@ -59,6 +60,7 @@ void OnRadioChange(tWidget *pWidget, uint32_t bSelected);
 void OnSliderChange(tWidget *pWidget, int32_t lValue);
 void UpdatePots(int32_t id, int32_t value); // add declaration
 void Reset();
+void WaitFor(unsigned int seconds);
 extern tCanvasWidget g_psPanels[];
 
 
@@ -73,6 +75,7 @@ int32_t TWEETER = 32;
 int32_t MIDRANGE = 32;
 int32_t BASS = 32;
 int32_t VOLUME = 50;
+int32_t TEMP = 30;
 
 //*****************************************************************************
 //
@@ -98,27 +101,8 @@ tCanvasWidget g_psPushButtonIndicators[] =
 				 0, 0),
 	CanvasStruct(g_psPanels + 0, 0, 0,
 				 &g_sKentec320x240x16_SSD2119, 28, 155, 110, 50,
-				 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "0 Celsius",
+				 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "",
 				 0, 0),
-/*
-	CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 1, 0,
-                 &g_sKentec320x240x16_SSD2119, 40, 85, 20, 20,
-                 CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),
-    CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 2, 0,
-                 &g_sKentec320x240x16_SSD2119, 90, 85, 20, 20,
-                 CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),
-    CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 3, 0,
-                 &g_sKentec320x240x16_SSD2119, 145, 85, 20, 20,
-                 CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),
-    CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 4, 0,
-                 &g_sKentec320x240x16_SSD2119, 40, 165, 20, 20,
-                 CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),
-    CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 5, 0,
-                 &g_sKentec320x240x16_SSD2119, 90, 165, 20, 20,
-                 CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),
-    CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 6, 0,
-                 &g_sKentec320x240x16_SSD2119, 145, 165, 20, 20,
-                 CANVAS_STYLE_IMG, 0, 0, 0, 0, 0, g_pucLightOff, 0),*/
 };
 tPushButtonWidget g_psPushButtons[] =
 {
@@ -520,24 +504,6 @@ OnSliderChange(tWidget *pWidget, int32_t lValue)
 void
 UpdatePots(int32_t id, int32_t value)
 {
-	/*
-	if(id == 0)
-	{
-		TWEETER = value;
-	}
-	if(id == 1)
-	{
-		MIDRANGE = value;
-	}
-	if(id == 2)
-	{
-		BASS = value;
-	}
-	if(id == 3)
-	{
-		VOLUME = value;
-	}
-	*/
 }
 
 
@@ -566,6 +532,10 @@ Reset()
 }
 
 
+void WaitFor (unsigned int secs) {
+    unsigned int retTime = time(0) + secs;     // Get finishing time.
+    while (time(0) < retTime);    // Loop until it arrives.
+}
 
 //*****************************************************************************
 //
@@ -673,11 +643,34 @@ main(void)
     //
     // Loop forever handling widget messages.
     //
+    int ui32Loop = 0;
+    static char TempText[5];
     while(1)
     {
         //
         // Process any messages in the widget message queue.
         //
         WidgetMessageQueueProcess();
+        //WaitFor(2);
+        // Hacky Delay Function
+        ui32Loop++;
+        if(ui32Loop == 2000000)
+        {
+        	ui32Loop = 0;
+        	TEMP = 25 + (rand() % 25);
+			g_psSliders[3].i32Value = TEMP;
+			usprintf(TempText, "%3dC", TEMP);
+			CanvasTextSet(&g_psPushButtonIndicators[3], TempText);
+			if(g_ulPanel == 0)
+			{
+				WidgetPaint((tWidget *)&g_psPushButtonIndicators);
+				WidgetPaint((tWidget *)&g_psPushButtonIndicators[3]);
+			}
+			if(g_ulPanel == 1)
+			{
+				//WidgetPaint((tWidget *)&g_sSliderValueCanvas);
+				WidgetPaint((tWidget *)&g_psSliders[3]);
+			}
+		}
     }
 }
