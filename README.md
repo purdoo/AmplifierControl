@@ -5,3 +5,4 @@ Designed to provide an interface for a KenTec LCD Touchscreen to control four se
 
 ## Images
 ![alt tag](https://raw.github.com/purdoo/AmplifierControl/master/Images/Screen1.PNG)
+![alt tag](https://raw.github.com/purdoo/AmplifierControl/master/Images/Screen2.PNG)
