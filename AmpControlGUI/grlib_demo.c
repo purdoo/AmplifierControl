@@ -26,6 +26,12 @@
 #include "Kentec320x240x16_ssd2119_8bit.h"
 #include "touch.h"
 #include "images.h"
+#include "inc/hw_ssi.h"
+#include "inc/hw_types.h"
+#include "driverlib/ssi.h"
+#include "driverlib/gpio.h"
+#include "driverlib/pin_map.h"
+#include "driverlib/sysctl.h"
 
 
 //*****************************************************************************
@@ -61,6 +67,9 @@ void OnSliderChange(tWidget *pWidget, int32_t lValue);
 void UpdatePots(int32_t id, int32_t value); // add declaration
 void Reset();
 void WaitFor(unsigned int seconds);
+void ADC();
+void SPI();
+void Test();
 extern tCanvasWidget g_psPanels[];
 
 
@@ -99,10 +108,16 @@ tCanvasWidget g_psPushButtonIndicators[] =
 				 &g_sKentec320x240x16_SSD2119, 30, 140, 110, 24,
 				 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "Temperature",
 				 0, 0),
+
+	CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 4, 0,
+				 &g_sKentec320x240x16_SSD2119, 28, 155, 110, 50,
+				 CANVAS_STYLE_TEXT, ClrBlack, 0, ClrSilver, &g_sFontCm20, "",
+				 0, 0),
 	CanvasStruct(g_psPanels + 0, 0, 0,
 				 &g_sKentec320x240x16_SSD2119, 28, 155, 110, 50,
-				 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "",
+				 CANVAS_STYLE_TEXT, ClrBlack, 0, ClrSilver, &g_sFontCm20, "",
 				 0, 0),
+
 };
 tPushButtonWidget g_psPushButtons[] =
 {
@@ -419,13 +434,16 @@ OnButtonPress(tWidget *pWidget)
     {
         return;
     }
-    OnNext(pWidget);
+    OnNext(pWidget); // if preset tonal control is hit, cycle to next panel/page
     if(pWidget == (tWidget *)&g_psPushButtons[0]) // Pop
     {
+    	// change the value of sliders, which triggers a redraw
     	g_psSliders[0].i32Value = 55;
     	g_psSliders[1].i32Value = 45;
     	g_psSliders[2].i32Value = 30;
-    	TWEETER = 55;
+
+    	// change the value of global variables used by other functions
+		TWEETER = 55;
 		MIDRANGE = 45;
     	BASS = 30;
     }
@@ -470,6 +488,9 @@ OnSliderChange(tWidget *pWidget, int32_t lValue)
 
 	if(pWidget == (tWidget *)&g_psSliders[0]) // Tweeter
 	{
+		//SliderValueSet(&g_psSliders[0], lValue);
+		//SSIDataPut(SSI0_Base, lValue);
+		//SysCtlDelay(128);
 		TWEETER = lValue;
 	}
 
@@ -487,6 +508,7 @@ OnSliderChange(tWidget *pWidget, int32_t lValue)
 	{
 		VOLUME = lValue;
 	}
+
 
 
 	/*
@@ -515,7 +537,7 @@ UpdatePots(int32_t id, int32_t value)
 //*****************************************************************************
 
 bool g_RedLedOn = false;
-
+bool onstate = true;
 void
 Reset()
 {
@@ -529,6 +551,7 @@ Reset()
     {
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x00);
     }
+    Test();
 }
 
 
@@ -536,6 +559,140 @@ void WaitFor (unsigned int secs) {
     unsigned int retTime = time(0) + secs;     // Get finishing time.
     while (time(0) < retTime);    // Loop until it arrives.
 }
+
+
+void ADC()
+{
+	/*
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC1); // ADC Module 1 (there are 2 onboard)
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // chosing GPIO A Pins
+	GPIOPinTypeADC(GPIO_PORTA_BASE, GPIO_PIN_2); // map the analog input pin to A2
+	ADCSequenceConfigure(ADC1_BASE, 3, ADC_TRIGGER_PROCESSOR, 0); // configuring settings for targets and step size
+	ADCSequenceStepConfigure(ADC1_BASE, 1, 0);
+	ADCSequenceEnable(ADC1_BASE, 1); // enable our configured pin
+	*/
+}
+
+#define NUM_SSI_DATA 8
+
+
+void Test()
+{
+	uint32_t data = 0;
+	uint32_t ulindex = 0;
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+	GPIOPinConfigure(GPIO_PA2_SSI0CLK);
+	GPIOPinConfigure(GPIO_PA5_SSI0TX);
+	GPIOPinTypeSSI(GPIO_PORTA_BASE,GPIO_PIN_5| GPIO_PIN_2);
+	// Initializes the four slave select pins (3,4,6,7)
+	/*
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_3);
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_6);
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_7);
+	 */
+	SSIConfigSetExpClk(SSI0_BASE,SysCtlClockGet(),SSI_FRF_MOTO_MODE_1,SSI_MODE_MASTER,10000,8);
+	SSIEnable(SSI0_BASE);
+	while(1)
+	{
+		data = 0;
+		for(ulindex = 0; ulindex < NUM_SSI_DATA; ulindex++)
+		{
+			data = data + 1;
+			SSIDataPut(SSI0_BASE, data);
+			while(SSIBusy(SSI0_BASE))
+			{
+
+			}
+			/*
+			GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_3, 0);
+			GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 128);
+			GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 128);
+			GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 128);*/
+			if(data > 70)
+			{
+				data = 0;
+			}
+		}
+
+	}
+}
+
+void SPI(uint32_t PotValue, uint32_t TargetPot)
+{
+	// Initializes the base SSI peripherals as well as the SPI_CLK and SPI_TX Pins
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+	GPIOPinConfigure(GPIO_PA2_SSI0CLK);
+	GPIOPinConfigure(GPIO_PA5_SSI0TX);
+	GPIOPinTypeSSI(GPIO_PORTA_BASE,GPIO_PIN_5| GPIO_PIN_2);
+	// Initializes the four slave select pins (3,4,6,7)
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_3);
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_6);
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_7);
+	// Sets the SPI Clock based on the system clock in Master Mode. Data Width is set to 16 as per DigiPot Specs
+	SSIConfigSetExpClk(SSI0_BASE,SysCtlClockGet(),SSI_FRF_MOTO_MODE_0,SSI_MODE_MASTER,1000000,16);
+	SSIEnable(SSI0_BASE);
+	if(TargetPot == 1)
+	{
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_3, 0);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 1);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 1);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 1);
+	}
+	if(TargetPot == 2)
+	{
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_3, 1);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 1);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 1);
+	}
+	if(TargetPot == 3)
+	{
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_3, 1);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 1);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 0);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 1);
+	}
+	if(TargetPot == 4)
+	{
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_3, 1);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 1);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 1);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 0);
+	}
+	SSIDataPut(SSI0_BASE, PotValue);
+	while(SSIBusy(SSI0_BASE))
+	{
+		// wait
+	}
+}
+
+	//SysCtlDelay(128);
+	//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 256);
+	/*
+	while(1)
+	{
+
+		data = 0;
+		for(ulindex = 0; ulindex < NUM_SSI_DATA; ulindex++)
+		{
+			data = data + 1;
+			SSIDataPut(SSI0_BASE, data);
+			while(SSIBusy(SSI0_BASE))
+			{
+
+			}
+		}
+
+	}
+	*/
+
 
 //*****************************************************************************
 //
@@ -552,7 +709,6 @@ main(void)
     // The FPU should be enabled because some compilers will use floating-
     // point registers, even for non-floating-point code.  If the FPU is not
     // enabled this will cause a fault.  This also ensures that floating-
-    // point operations could be added to this application and would work
     // correctly and use the hardware floating-point unit.  Finally, lazy
     // stacking is enabled for interrupt handlers.  This allows floating-
     // point instructions to be used within interrupt handlers, but at the
@@ -645,15 +801,15 @@ main(void)
     //
     int ui32Loop = 0;
     static char TempText[5];
+
     while(1)
     {
-        //
         // Process any messages in the widget message queue.
-        //
         WidgetMessageQueueProcess();
         //WaitFor(2);
         // Hacky Delay Function
         ui32Loop++;
+
         if(ui32Loop == 2000000)
         {
         	ui32Loop = 0;
@@ -663,7 +819,8 @@ main(void)
 			CanvasTextSet(&g_psPushButtonIndicators[3], TempText);
 			if(g_ulPanel == 0)
 			{
-				WidgetPaint((tWidget *)&g_psPushButtonIndicators);
+				//WidgetPaint((tWidget *)&g_psPushButtonIndicators);
+				WidgetPaint((tWidget *)&g_psPushButtonIndicators[4]);
 				WidgetPaint((tWidget *)&g_psPushButtonIndicators[3]);
 			}
 			if(g_ulPanel == 1)
@@ -671,6 +828,8 @@ main(void)
 				//WidgetPaint((tWidget *)&g_sSliderValueCanvas);
 				WidgetPaint((tWidget *)&g_psSliders[3]);
 			}
+			//SPI(TWEETER);
 		}
+
     }
 }
