@@ -6,6 +6,7 @@
 #include "inc/hw_nvic.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
+#include "driverlib/adc.h"
 #include "driverlib/fpu.h"
 #include "driverlib/gpio.h"
 #include "driverlib/flash.h"
@@ -563,14 +564,14 @@ void WaitFor (unsigned int secs) {
 
 void ADC()
 {
-	/*
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC1); // ADC Module 1 (there are 2 onboard)
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // chosing GPIO A Pins
-	GPIOPinTypeADC(GPIO_PORTA_BASE, GPIO_PIN_2); // map the analog input pin to A2
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC1);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+	GPIOPinTypeADC(GPIO_PORTA_BASE, GPIO_PIN_2);
 	ADCSequenceConfigure(ADC1_BASE, 3, ADC_TRIGGER_PROCESSOR, 0); // configuring settings for targets and step size
-	ADCSequenceStepConfigure(ADC1_BASE, 1, 0);
+	ADCSequenceStepConfigure(ADC1_BASE, 1, 0, 0);
 	ADCSequenceEnable(ADC1_BASE, 1); // enable our configured pin
-	*/
+
 }
 
 #define NUM_SSI_DATA 8
@@ -674,6 +675,7 @@ void SPI(uint32_t PotValue, uint32_t TargetPot)
 }
 
 	//SysCtlDelay(128);
+
 	//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 256);
 	/*
 	while(1)
