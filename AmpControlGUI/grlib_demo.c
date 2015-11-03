@@ -89,6 +89,16 @@ int32_t TEMP = 30;
 
 //*****************************************************************************
 //
+// Temperature Sensor Global Variables
+//
+//*****************************************************************************
+
+int tempF = 0;
+float millivolts;
+float celsius;
+
+//*****************************************************************************
+//
 // Selection of push buttons.
 //
 //*****************************************************************************
@@ -564,14 +574,21 @@ void WaitFor (unsigned int secs) {
 
 void ADC()
 {
-
+	 SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC1);
+	 SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+	 GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_1);
+	 ADCSequenceConfigure(ADC1_BASE, 3, ADC_TRIGGER_PROCESSOR, 0);
+	 ADCSequenceStepConfigure(ADC1_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END);
+	 ADCSequenceEnable(ADC1_BASE, 3);
+	 ADCIntClear(ADC1_BASE, 3);
+	/*
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC1);
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
 	GPIOPinTypeADC(GPIO_PORTA_BASE, GPIO_PIN_2);
 	ADCSequenceConfigure(ADC1_BASE, 3, ADC_TRIGGER_PROCESSOR, 0); // configuring settings for targets and step size
 	ADCSequenceStepConfigure(ADC1_BASE, 1, 0, 0);
 	ADCSequenceEnable(ADC1_BASE, 1); // enable our configured pin
-
+	*/
 }
 
 #define NUM_SSI_DATA 8
@@ -707,21 +724,16 @@ main(void)
     tContext sContext;
     tRectangle sRect;
 
-    //
     // The FPU should be enabled because some compilers will use floating-
     // point registers, even for non-floating-point code.  If the FPU is not
     // enabled this will cause a fault.  This also ensures that floating-
     // correctly and use the hardware floating-point unit.  Finally, lazy
     // stacking is enabled for interrupt handlers.  This allows floating-
-    // point instructions to be used within interrupt handlers, but at the
-    // expense of extra stack usage.
-    //
+    // point instructions to be used within interrupt handlers, but at the expense of extra stack usage.
     FPUEnable();
     FPULazyStackingEnable();
 
-    //
     // Set the clock to 40Mhz derived from the PLL and the external oscillator
-    //
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ |
                        SYSCTL_OSC_MAIN);
 
@@ -730,19 +742,13 @@ main(void)
         GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0x00);
 
-    //
     // Initialize the display driver.
-    //
     Kentec320x240x16_SSD2119Init();
 
-    //
     // Initialize the graphics context.
-    //
     GrContextInit(&sContext, &g_sKentec320x240x16_SSD2119);
 
-    //
     // Fill the top 24 rows of the screen with blue to create the banner.
-    //
     sRect.i16XMin = 0;
     sRect.i16YMin = 0;
     sRect.i16XMax = GrContextDpyWidthGet(&sContext) - 1;
@@ -750,45 +756,31 @@ main(void)
     GrContextForegroundSet(&sContext, ClrDarkBlue);
     GrRectFill(&sContext, &sRect);
 
-    //
     // Put a white box around the banner.
-    //
     GrContextForegroundSet(&sContext, ClrWhite);
     GrRectDraw(&sContext, &sRect);
 
-    //
     // Put the application name in the middle of the banner.
-    //
     GrContextFontSet(&sContext, &g_sFontCm20);
     GrStringDrawCentered(&sContext, "HiFi Sound System", -1,
                          GrContextDpyWidthGet(&sContext) / 2, 8, 0);
 
-    //
     // Configure and enable uDMA
-    //
     SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
     SysCtlDelay(10);
     uDMAControlBaseSet(&sDMAControlTable[0]);
     uDMAEnable();
 
-    //
-    // Initialize the touch screen driver and have it route its messages to the
-    // widget tree.
-    //
+    // Initialize the touch screen driver and have it route its messages to the widget tree.
     TouchScreenInit();
     TouchScreenCallbackSet(WidgetPointerMessage);
 
-    //
-    // Add the title block and the previous and next buttons to the widget
-    // tree.
-    //
+    // Add the title block and the previous and next buttons to the widget tree.
     WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sPrevious);
     WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sTitle);
     WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sNext);
 
-    //
     // Add the first panel to the widget tree.
-    //
     g_ulPanel = 0;
     WidgetAdd(WIDGET_ROOT, (tWidget *)g_psPanels);
     CanvasTextSet(&g_sTitle, g_pcPanelNames[0]);
@@ -798,23 +790,47 @@ main(void)
     //
     WidgetPaint(WIDGET_ROOT);
 
-    //
-    // Loop forever handling widget messages.
-    //
+    ADC();
     int ui32Loop = 0;
+    uint32_t ADC0Value[1];
+	//int tempF = 0;
     static char TempText[5];
 
     while(1)
     {
-        // Process any messages in the widget message queue.
-        WidgetMessageQueueProcess();
-        //WaitFor(2);
-        // Hacky Delay Function
-        ui32Loop++;
 
+        ui32Loop++;
         if(ui32Loop == 2000000)
         {
-        	ui32Loop = 0;
+
+            ADCProcessorTrigger(ADC1_BASE, 3);
+            while(!ADCIntStatus(ADC1_BASE, 3, false))
+            {
+            }
+            ADCIntClear(ADC1_BASE, 3);
+            ADCSequenceDataGet(ADC1_BASE, 3, ADC0Value);
+            millivolts = (ADC0Value[0] * 3.3 * 100) / 4096;
+            //millivolts = (ADC0Value[0]/1024.0) * 5000;
+            celsius= millivolts/10;
+
+        	g_psSliders[3].i32Value = tempF;
+        	usprintf(TempText, "%3dC", tempF);
+			CanvasTextSet(&g_psPushButtonIndicators[3], TempText);
+			if(g_ulPanel == 0)
+			{
+				//WidgetPaint((tWidget *)&g_psPushButtonIndicators);
+				WidgetPaint((tWidget *)&g_psPushButtonIndicators[4]);
+				WidgetPaint((tWidget *)&g_psPushButtonIndicators[3]);
+			}
+			if(g_ulPanel == 1)
+			{
+				//WidgetPaint((tWidget *)&g_sSliderValueCanvas);
+				WidgetPaint((tWidget *)&g_psSliders[3]);
+			}
+			ui32Loop = 0;
+
+
+        	/*
         	TEMP = 25 + (rand() % 25);
 			g_psSliders[3].i32Value = TEMP;
 			usprintf(TempText, "%3dC", TEMP);
@@ -830,8 +846,9 @@ main(void)
 				//WidgetPaint((tWidget *)&g_sSliderValueCanvas);
 				WidgetPaint((tWidget *)&g_psSliders[3]);
 			}
-			//SPI(TWEETER);
+			*/
 		}
+        WidgetMessageQueueProcess();
 
     }
 }
