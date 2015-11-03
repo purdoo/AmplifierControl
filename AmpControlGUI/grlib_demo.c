@@ -719,9 +719,7 @@ main(void)
     FPUEnable();
     FPULazyStackingEnable();
 
-    //
     // Set the clock to 40Mhz derived from the PLL and the external oscillator
-    //
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ |
                        SYSCTL_OSC_MAIN);
 
@@ -730,19 +728,13 @@ main(void)
         GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0x00);
 
-    //
     // Initialize the display driver.
-    //
     Kentec320x240x16_SSD2119Init();
 
-    //
     // Initialize the graphics context.
-    //
     GrContextInit(&sContext, &g_sKentec320x240x16_SSD2119);
 
-    //
     // Fill the top 24 rows of the screen with blue to create the banner.
-    //
     sRect.i16XMin = 0;
     sRect.i16YMin = 0;
     sRect.i16XMax = GrContextDpyWidthGet(&sContext) - 1;
@@ -750,31 +742,22 @@ main(void)
     GrContextForegroundSet(&sContext, ClrDarkBlue);
     GrRectFill(&sContext, &sRect);
 
-    //
     // Put a white box around the banner.
-    //
     GrContextForegroundSet(&sContext, ClrWhite);
     GrRectDraw(&sContext, &sRect);
 
-    //
     // Put the application name in the middle of the banner.
-    //
     GrContextFontSet(&sContext, &g_sFontCm20);
     GrStringDrawCentered(&sContext, "HiFi Sound System", -1,
                          GrContextDpyWidthGet(&sContext) / 2, 8, 0);
 
-    //
     // Configure and enable uDMA
-    //
     SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
     SysCtlDelay(10);
     uDMAControlBaseSet(&sDMAControlTable[0]);
     uDMAEnable();
 
-    //
-    // Initialize the touch screen driver and have it route its messages to the
-    // widget tree.
-    //
+    // Initialize the touch screen driver and have it route its messages to the widget tree.
     TouchScreenInit();
     TouchScreenCallbackSet(WidgetPointerMessage);
 
