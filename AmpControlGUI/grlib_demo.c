@@ -724,12 +724,6 @@ main(void)
     tContext sContext;
     tRectangle sRect;
 
-    // The FPU should be enabled because some compilers will use floating-
-    // point registers, even for non-floating-point code.  If the FPU is not
-    // enabled this will cause a fault.  This also ensures that floating-
-    // correctly and use the hardware floating-point unit.  Finally, lazy
-    // stacking is enabled for interrupt handlers.  This allows floating-
-    // point instructions to be used within interrupt handlers, but at the expense of extra stack usage.
     FPUEnable();
     FPULazyStackingEnable();
 
@@ -830,23 +824,6 @@ main(void)
 			ui32Loop = 0;
 
 
-        	/*
-        	TEMP = 25 + (rand() % 25);
-			g_psSliders[3].i32Value = TEMP;
-			usprintf(TempText, "%3dC", TEMP);
-			CanvasTextSet(&g_psPushButtonIndicators[3], TempText);
-			if(g_ulPanel == 0)
-			{
-				//WidgetPaint((tWidget *)&g_psPushButtonIndicators);
-				WidgetPaint((tWidget *)&g_psPushButtonIndicators[4]);
-				WidgetPaint((tWidget *)&g_psPushButtonIndicators[3]);
-			}
-			if(g_ulPanel == 1)
-			{
-				//WidgetPaint((tWidget *)&g_sSliderValueCanvas);
-				WidgetPaint((tWidget *)&g_psSliders[3]);
-			}
-			*/
 		}
         WidgetMessageQueueProcess();
 
