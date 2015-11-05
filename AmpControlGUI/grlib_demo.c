@@ -2,6 +2,7 @@
 #include "stdbool.h"
 #include "stdlib.h"
 #include "time.h"
+#include "math.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_nvic.h"
 #include "inc/hw_sysctl.h"
@@ -121,13 +122,9 @@ tCanvasWidget g_psPushButtonIndicators[] =
 				 CANVAS_STYLE_TEXT, 0, 0, ClrSilver, &g_sFontCm20, "Temperature",
 				 0, 0),
 
-	CanvasStruct(g_psPanels + 0, g_psPushButtonIndicators + 4, 0,
-				 &g_sKentec320x240x16_SSD2119, 28, 155, 110, 50,
-				 CANVAS_STYLE_TEXT, ClrBlack, 0, ClrSilver, &g_sFontCm20, "",
-				 0, 0),
 	CanvasStruct(g_psPanels + 0, 0, 0,
 				 &g_sKentec320x240x16_SSD2119, 28, 155, 110, 50,
-				 CANVAS_STYLE_TEXT, ClrBlack, 0, ClrSilver, &g_sFontCm20, "",
+				 CANVAS_STYLE_TEXT | CANVAS_STYLE_TEXT_OPAQUE, ClrBlack, 0, ClrSilver, &g_sFontCm20, "",
 				 0, 0),
 
 };
@@ -423,8 +420,7 @@ OnNext(tWidget *pWidget)
 // Handles press notifications for the push button widgets.
 //
 //*****************************************************************************
-void
-OnButtonPress(tWidget *pWidget)
+void OnButtonPress(tWidget *pWidget)
 {
     uint32_t ulIdx;
 
@@ -550,11 +546,9 @@ UpdatePots(int32_t id, int32_t value)
 
 bool g_RedLedOn = false;
 bool onstate = true;
-void
-Reset()
+void Reset()
 {
     g_RedLedOn = !g_RedLedOn;
-
     if(g_RedLedOn)
     {
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x02);
@@ -563,7 +557,6 @@ Reset()
     {
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x00);
     }
-    Test();
 }
 
 
@@ -584,11 +577,11 @@ void InitADC()
 	 ADCIntClear(ADC1_BASE, 3);
 }
 
+uint32_t ADC0Value[1];
+char TempText[5];
+int rounded = 0;
 void ReadTemp()
 {
-    uint32_t ADC0Value[1];
-    static char TempText[5];
-
     ADCProcessorTrigger(ADC1_BASE, 3);
     while(!ADCIntStatus(ADC1_BASE, 3, false))
     {
@@ -597,18 +590,19 @@ void ReadTemp()
     ADCIntClear(ADC1_BASE, 3);
     ADCSequenceDataGet(ADC1_BASE, 3, ADC0Value);
     millivolts = (ADC0Value[0] * 3.3 * 100) / 4096;
-    celsius= millivolts/10;
- 	g_psSliders[3].i32Value = celsius;
- 	usprintf(TempText, "%3dC", celsius);
+    celsius = millivolts/10;
+    rounded = (int)roundf(millivolts);
+ 	usprintf(TempText, "%3dC", rounded);
 	CanvasTextSet(&g_psPushButtonIndicators[3], TempText);
-	/*
+
 	if(g_ulPanel == 0)
 	{
-		WidgetPaint((tWidget *)&g_psPushButtonIndicators[4]);
 		WidgetPaint((tWidget *)&g_psPushButtonIndicators[3]);
 	}
+	/*
 	if(g_ulPanel == 1)
 	{
+		g_psSliders[3].i32Value = celsius;
 		WidgetPaint((tWidget *)&g_psSliders[3]);
 	}*/
 }
@@ -786,6 +780,5 @@ int main(void)
 			ui32Loop = 0;
 		}
         WidgetMessageQueueProcess();
-
     }
 }
