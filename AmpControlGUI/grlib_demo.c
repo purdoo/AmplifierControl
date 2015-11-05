@@ -66,13 +66,12 @@ void OnCheckChange(tWidget *pWidget, uint32_t bSelected);
 void OnButtonPress(tWidget *pWidget);
 void OnRadioChange(tWidget *pWidget, uint32_t bSelected);
 void OnSliderChange(tWidget *pWidget, int32_t lValue);
-void UpdatePots(int32_t id, int32_t value); // add declaration
 void Reset();
-void WaitFor(unsigned int seconds);
 void InitADC();
 void ReadTemp();
+void InitSPI();
 void SPI();
-void Test();
+
 extern tCanvasWidget g_psPanels[];
 
 
@@ -158,6 +157,7 @@ tPushButtonWidget g_psPushButtons[] =
 							 ClrGray, ClrSilver, &g_sFontCm22, "Reset", 0, 0, 125, 25,
 							 Reset),
 };
+
 #define NUM_PUSH_BUTTONS        (sizeof(g_psPushButtons) /   \
                                  sizeof(g_psPushButtons[0]))
 uint32_t g_ulButtonState;
@@ -208,9 +208,6 @@ tSliderWidget g_psSliders[] =
 
 };
 
-#define SLIDER_TEXT_VAL_INDEX   0
-#define SLIDER_LOCKED_INDEX     2
-#define SLIDER_CANVAS_VAL_INDEX 4
 
 #define NUM_SLIDERS (sizeof(g_psSliders) / sizeof(g_psSliders[0]))
 
@@ -228,19 +225,8 @@ tCanvasWidget g_psPanels[] =
                  24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
 };
 
-//*****************************************************************************
-//
-// The number of panels.
-//
-//*****************************************************************************
 #define NUM_PANELS              (sizeof(g_psPanels) / sizeof(g_psPanels[0]))
 
-//*****************************************************************************
-//
-// The names for each of the panels, which is displayed at the bottom of the
-// screen.
-//
-//*****************************************************************************
 char *g_pcPanelNames[] =
 {
     "     Settings     ",
@@ -266,75 +252,43 @@ RectangularButton(g_sNext, 0, 0, 0, &g_sKentec320x240x16_SSD2119, 270, 210,
                   ClrSilver, &g_sFontCm20, "+", g_pucBlue50x50,
                   g_pucBlue50x50Press, 0, 0, OnNext);
 
-//*****************************************************************************
-//
-// The panel that is currently being displayed.
-//
-//*****************************************************************************
-uint32_t g_ulPanel;
+
+
 
 //*****************************************************************************
 //
 // Handles presses of the previous panel button.
 //
 //*****************************************************************************
-void
-OnPrevious(tWidget *pWidget)
+uint32_t g_ulPanel;
+
+void OnPrevious(tWidget *pWidget)
 {
-    //
-    // There is nothing to be done if the first panel is already being
-    // displayed.
-    //
     if(g_ulPanel == 0)
     {
         return;
     }
 
-    //
-    // Remove the current panel.
-    //
     WidgetRemove((tWidget *)(g_psPanels + g_ulPanel));
 
-    //
-    // Decrement the panel index.
-    //
     g_ulPanel--;
 
-    //
-    // Add and draw the new panel.
-    //
     WidgetAdd(WIDGET_ROOT, (tWidget *)(g_psPanels + g_ulPanel));
     WidgetPaint((tWidget *)(g_psPanels + g_ulPanel));
 
-    //
-    // Set the title of this panel.
-    //
     CanvasTextSet(&g_sTitle, g_pcPanelNames[g_ulPanel]);
     WidgetPaint((tWidget *)&g_sTitle);
 
-    //
-    // See if this is the first panel.
-    //
     if(g_ulPanel == 0)
     {
-        //
-        // Clear the previous button from the display since the first panel is
-        // being displayed.
-        //
         PushButtonImageOff(&g_sPrevious);
         PushButtonTextOff(&g_sPrevious);
         PushButtonFillOn(&g_sPrevious);
         WidgetPaint((tWidget *)&g_sPrevious);
     }
 
-    //
-    // See if the previous panel was the last panel.
-    //
     if(g_ulPanel == (NUM_PANELS - 2))
     {
-        //
-        // Display the next button.
-        //
         PushButtonImageOn(&g_sNext);
         PushButtonTextOn(&g_sNext);
         PushButtonFillOff(&g_sNext);
@@ -348,63 +302,33 @@ OnPrevious(tWidget *pWidget)
 // Handles presses of the next panel button.
 //
 //*****************************************************************************
-void
-OnNext(tWidget *pWidget)
+void OnNext(tWidget *pWidget)
 {
-    //
-    // There is nothing to be done if the last panel is already being
-    // displayed.
-    //
     if(g_ulPanel == (NUM_PANELS - 1))
     {
         return;
     }
 
-    //
-    // Remove the current panel.
-    //
     WidgetRemove((tWidget *)(g_psPanels + g_ulPanel));
 
-    //
-    // Increment the panel index.
-    //
     g_ulPanel++;
 
-    //
-    // Add and draw the new panel.
-    //
     WidgetAdd(WIDGET_ROOT, (tWidget *)(g_psPanels + g_ulPanel));
     WidgetPaint((tWidget *)(g_psPanels + g_ulPanel));
 
-    //
-    // Set the title of this panel.
-    //
     CanvasTextSet(&g_sTitle, g_pcPanelNames[g_ulPanel]);
     WidgetPaint((tWidget *)&g_sTitle);
 
-    //
-    // See if the previous panel was the first panel.
-    //
     if(g_ulPanel == 1)
     {
-        //
-        // Display the previous button.
-        //
         PushButtonImageOn(&g_sPrevious);
         PushButtonTextOn(&g_sPrevious);
         PushButtonFillOff(&g_sPrevious);
         WidgetPaint((tWidget *)&g_sPrevious);
     }
 
-    //
-    // See if this is the last panel.
-    //
     if(g_ulPanel == (NUM_PANELS - 1))
     {
-        //
-        // Clear the next button from the display since the last panel is being
-        // displayed.
-        //
         PushButtonImageOff(&g_sNext);
         PushButtonTextOff(&g_sNext);
         PushButtonFillOn(&g_sNext);
@@ -424,9 +348,6 @@ void OnButtonPress(tWidget *pWidget)
 {
     uint32_t ulIdx;
 
-    //
-    // Find the index of this push button.
-    //
     for(ulIdx = 0; ulIdx < NUM_PUSH_BUTTONS; ulIdx++)
     {
         if(pWidget == (tWidget *)(g_psPushButtons + ulIdx))
@@ -435,9 +356,6 @@ void OnButtonPress(tWidget *pWidget)
         }
     }
 
-    //
-    // Return if the push button could not be found.
-    //
     if(ulIdx == NUM_PUSH_BUTTONS)
     {
         return;
@@ -490,15 +408,17 @@ void OnButtonPress(tWidget *pWidget)
 // Handles notifications from the slider controls.
 //
 //*****************************************************************************
-void
-OnSliderChange(tWidget *pWidget, int32_t lValue)
+void OnSliderChange(tWidget *pWidget, int32_t lValue)
 {
 
 	if(pWidget == (tWidget *)&g_psSliders[0]) // Tweeter
 	{
-		//SliderValueSet(&g_psSliders[0], lValue);
-		//SSIDataPut(SSI0_Base, lValue);
-		//SysCtlDelay(128);
+		/*
+		SSIDataPut(SSI0_BASE, lValue);
+		while(SSIBusy(SSI0_BASE))
+		{
+			// wait
+		}*/
 		TWEETER = lValue;
 	}
 
@@ -527,19 +447,6 @@ OnSliderChange(tWidget *pWidget, int32_t lValue)
 
 //*****************************************************************************
 //
-// Passes the Slider Values to SPI Bus
-//
-//*****************************************************************************
-
-void
-UpdatePots(int32_t id, int32_t value)
-{
-}
-
-
-
-//*****************************************************************************
-//
 // Reset Function (Currently just blinks onboard LED)
 //
 //*****************************************************************************
@@ -558,13 +465,6 @@ void Reset()
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x00);
     }
 }
-
-
-void WaitFor (unsigned int secs) {
-    unsigned int retTime = time(0) + secs;     // Get finishing time.
-    while (time(0) < retTime);    // Loop until it arrives.
-}
-
 
 void InitADC()
 {
@@ -607,14 +507,9 @@ void ReadTemp()
 	}*/
 }
 
-#define NUM_SSI_DATA 8
-
-
-void Test()
+void InitSPI()
 {
-	uint32_t data = 0;
-	uint32_t ulindex = 0;
-
+	// Initializes the base SSI peripherals as well as the SPI_CLK and SPI_TX Pins
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0);
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
@@ -622,41 +517,19 @@ void Test()
 	GPIOPinConfigure(GPIO_PA5_SSI0TX);
 	GPIOPinTypeSSI(GPIO_PORTA_BASE,GPIO_PIN_5| GPIO_PIN_2);
 	// Initializes the four slave select pins (3,4,6,7)
-	/*
 	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_3);
 	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
 	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_6);
 	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_7);
-	 */
-	SSIConfigSetExpClk(SSI0_BASE,SysCtlClockGet(),SSI_FRF_MOTO_MODE_1,SSI_MODE_MASTER,10000,8);
+	// Sets the SPI Clock based on the system clock in Master Mode. Data Width is set to 16 as per DigiPot Specs
+	SSIConfigSetExpClk(SSI0_BASE,SysCtlClockGet(),SSI_FRF_MOTO_MODE_0,SSI_MODE_MASTER,1000000,16);
 	SSIEnable(SSI0_BASE);
-	while(1)
-	{
-		data = 0;
-		for(ulindex = 0; ulindex < NUM_SSI_DATA; ulindex++)
-		{
-			data = data + 1;
-			SSIDataPut(SSI0_BASE, data);
-			while(SSIBusy(SSI0_BASE))
-			{
-
-			}
-			/*
-			GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_3, 0);
-			GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 128);
-			GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 128);
-			GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 128);*/
-			if(data > 70)
-			{
-				data = 0;
-			}
-		}
-
-	}
 }
 
+#define NUM_SSI_DATA 8
 void SPI(uint32_t PotValue, uint32_t TargetPot)
 {
+	/*
 	// Initializes the base SSI peripherals as well as the SPI_CLK and SPI_TX Pins
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0);
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
@@ -705,9 +578,8 @@ void SPI(uint32_t PotValue, uint32_t TargetPot)
 	{
 		// wait
 	}
+	*/
 }
-
-	//SysCtlDelay(128);
 
 int main(void)
 {
@@ -769,6 +641,7 @@ int main(void)
     WidgetPaint(WIDGET_ROOT);
 
     InitADC();
+    //InitSPI();
     int ui32Loop = 0;
 
     while(1)
@@ -776,7 +649,7 @@ int main(void)
         ui32Loop++;
         if(ui32Loop == 2000000)
         {
-        	ReadTemp();
+        	//ReadTemp();
 			ui32Loop = 0;
 		}
         WidgetMessageQueueProcess();
