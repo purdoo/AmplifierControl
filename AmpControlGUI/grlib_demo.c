@@ -68,7 +68,8 @@ void OnSliderChange(tWidget *pWidget, int32_t lValue);
 void UpdatePots(int32_t id, int32_t value); // add declaration
 void Reset();
 void WaitFor(unsigned int seconds);
-void ADC();
+void InitADC();
+void ReadTemp();
 void SPI();
 void Test();
 extern tCanvasWidget g_psPanels[];
@@ -572,7 +573,7 @@ void WaitFor (unsigned int secs) {
 }
 
 
-void ADC()
+void InitADC()
 {
 	 SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC1);
 	 SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
@@ -581,14 +582,35 @@ void ADC()
 	 ADCSequenceStepConfigure(ADC1_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END);
 	 ADCSequenceEnable(ADC1_BASE, 3);
 	 ADCIntClear(ADC1_BASE, 3);
+}
+
+void ReadTemp()
+{
+    uint32_t ADC0Value[1];
+    static char TempText[5];
+
+    ADCProcessorTrigger(ADC1_BASE, 3);
+    while(!ADCIntStatus(ADC1_BASE, 3, false))
+    {
+    	// wait
+    }
+    ADCIntClear(ADC1_BASE, 3);
+    ADCSequenceDataGet(ADC1_BASE, 3, ADC0Value);
+    millivolts = (ADC0Value[0] * 3.3 * 100) / 4096;
+    celsius= millivolts/10;
+ 	g_psSliders[3].i32Value = celsius;
+ 	usprintf(TempText, "%3dC", celsius);
+	CanvasTextSet(&g_psPushButtonIndicators[3], TempText);
 	/*
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC1);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-	GPIOPinTypeADC(GPIO_PORTA_BASE, GPIO_PIN_2);
-	ADCSequenceConfigure(ADC1_BASE, 3, ADC_TRIGGER_PROCESSOR, 0); // configuring settings for targets and step size
-	ADCSequenceStepConfigure(ADC1_BASE, 1, 0, 0);
-	ADCSequenceEnable(ADC1_BASE, 1); // enable our configured pin
-	*/
+	if(g_ulPanel == 0)
+	{
+		WidgetPaint((tWidget *)&g_psPushButtonIndicators[4]);
+		WidgetPaint((tWidget *)&g_psPushButtonIndicators[3]);
+	}
+	if(g_ulPanel == 1)
+	{
+		WidgetPaint((tWidget *)&g_psSliders[3]);
+	}*/
 }
 
 #define NUM_SSI_DATA 8
@@ -693,33 +715,7 @@ void SPI(uint32_t PotValue, uint32_t TargetPot)
 
 	//SysCtlDelay(128);
 
-	//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 256);
-	/*
-	while(1)
-	{
-
-		data = 0;
-		for(ulindex = 0; ulindex < NUM_SSI_DATA; ulindex++)
-		{
-			data = data + 1;
-			SSIDataPut(SSI0_BASE, data);
-			while(SSIBusy(SSI0_BASE))
-			{
-
-			}
-		}
-
-	}
-	*/
-
-
-//*****************************************************************************
-//
-// A simple demonstration of the features of the Stellaris Graphics Library.
-//
-//*****************************************************************************
-int
-main(void)
+int main(void)
 {
     tContext sContext;
     tRectangle sRect;
@@ -728,8 +724,7 @@ main(void)
     FPULazyStackingEnable();
 
     // Set the clock to 40Mhz derived from the PLL and the external oscillator
-    SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ |
-                       SYSCTL_OSC_MAIN);
+    SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ | SYSCTL_OSC_MAIN);
 
     // Reset Button Bindings
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
@@ -756,19 +751,16 @@ main(void)
 
     // Put the application name in the middle of the banner.
     GrContextFontSet(&sContext, &g_sFontCm20);
-    GrStringDrawCentered(&sContext, "HiFi Sound System", -1,
-                         GrContextDpyWidthGet(&sContext) / 2, 8, 0);
+    GrStringDrawCentered(&sContext, "HiFi Sound System", -1, GrContextDpyWidthGet(&sContext) / 2, 8, 0);
 
     // Configure and enable uDMA
     SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
     SysCtlDelay(10);
     uDMAControlBaseSet(&sDMAControlTable[0]);
     uDMAEnable();
-
     // Initialize the touch screen driver and have it route its messages to the widget tree.
     TouchScreenInit();
     TouchScreenCallbackSet(WidgetPointerMessage);
-
     // Add the title block and the previous and next buttons to the widget tree.
     WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sPrevious);
     WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sTitle);
@@ -779,51 +771,19 @@ main(void)
     WidgetAdd(WIDGET_ROOT, (tWidget *)g_psPanels);
     CanvasTextSet(&g_sTitle, g_pcPanelNames[0]);
 
-    //
     // Issue the initial paint request to the widgets.
-    //
     WidgetPaint(WIDGET_ROOT);
 
-    ADC();
+    InitADC();
     int ui32Loop = 0;
-    uint32_t ADC0Value[1];
-	//int tempF = 0;
-    static char TempText[5];
 
     while(1)
     {
-
         ui32Loop++;
         if(ui32Loop == 2000000)
         {
-
-            ADCProcessorTrigger(ADC1_BASE, 3);
-            while(!ADCIntStatus(ADC1_BASE, 3, false))
-            {
-            }
-            ADCIntClear(ADC1_BASE, 3);
-            ADCSequenceDataGet(ADC1_BASE, 3, ADC0Value);
-            millivolts = (ADC0Value[0] * 3.3 * 100) / 4096;
-            //millivolts = (ADC0Value[0]/1024.0) * 5000;
-            celsius= millivolts/10;
-
-        	g_psSliders[3].i32Value = tempF;
-        	usprintf(TempText, "%3dC", tempF);
-			CanvasTextSet(&g_psPushButtonIndicators[3], TempText);
-			if(g_ulPanel == 0)
-			{
-				//WidgetPaint((tWidget *)&g_psPushButtonIndicators);
-				WidgetPaint((tWidget *)&g_psPushButtonIndicators[4]);
-				WidgetPaint((tWidget *)&g_psPushButtonIndicators[3]);
-			}
-			if(g_ulPanel == 1)
-			{
-				//WidgetPaint((tWidget *)&g_sSliderValueCanvas);
-				WidgetPaint((tWidget *)&g_psSliders[3]);
-			}
+        	ReadTemp();
 			ui32Loop = 0;
-
-
 		}
         WidgetMessageQueueProcess();
 
