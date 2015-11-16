@@ -410,19 +410,23 @@ void OnButtonPress(tWidget *pWidget)
 //*****************************************************************************
 void OnSliderChange(tWidget *pWidget, int32_t lValue)
 {
+
 	if(pWidget == (tWidget *)&g_psSliders[0]) // Tweeter
 	{
-		/*
+
 		SSIDataPut(SSI3_BASE, lValue);
-		//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_3, 0);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
-		//SysCtlDelay(100000);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 128);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5, 128);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 128);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 128);
 		SysCtlDelay(64);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
+		SysCtlDelay(64);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 128);
 		while(SSIBusy(SSI3_BASE))
 		{
 			// wait
 		}
-		 */
 		TWEETER = lValue;
 	}
 
@@ -459,6 +463,7 @@ bool g_RedLedOn = false;
 bool onstate = true;
 void Reset()
 {
+	/*
 	while(1)
 	{
 		SSIDataPut(SSI3_BASE, 10);
@@ -466,7 +471,7 @@ void Reset()
 		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
 		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5, 0x00000080);
 		SysCtlDelay(1000);
-	}
+	}*/
     g_RedLedOn = !g_RedLedOn;
     if(g_RedLedOn)
     {
@@ -528,32 +533,9 @@ void InitSPI()
 	GPIOPinConfigure(GPIO_PD0_SSI3CLK);
 	GPIOPinConfigure(GPIO_PD3_SSI3TX );
 	GPIOPinTypeSSI(GPIO_PORTD_BASE,GPIO_PIN_0| GPIO_PIN_3);
-
-	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
-	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_5);
-	//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
-	SSIConfigSetExpClk(SSI3_BASE,SysCtlClockGet(),SSI_FRF_MOTO_MODE_0,SSI_MODE_MASTER,1000000,16);
+	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7);
+	SSIConfigSetExpClk(SSI3_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 1000000, 16);
 	SSIEnable(SSI3_BASE);
-
-
-	/*
-	// Initializes the base SSI peripherals as well as the SPI_CLK and SPI_TX Pins
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
-	GPIOPinConfigure(GPIO_PA2_SSI0CLK);
-	GPIOPinConfigure(GPIO_PA5_SSI0TX);
-	GPIOPinTypeSSI(GPIO_PORTA_BASE,GPIO_PIN_5| GPIO_PIN_2);
-	// Initializes the four slave select pins (3,4,6,7)
-	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_3);
-	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
-	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_6);
-	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_7);
-	// Sets the SPI Clock based on the system clock in Master Mode. Data Width is set to 16 as per DigiPot Specs
-	SSIConfigSetExpClk(SSI0_BASE,SysCtlClockGet(),SSI_FRF_MOTO_MODE_0,SSI_MODE_MASTER,1000000,16);
-	SSIEnable(SSI0_BASE);
-	*/
-
 }
 
 int main(void)
