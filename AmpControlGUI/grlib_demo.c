@@ -445,12 +445,6 @@ void OnSliderChange(tWidget *pWidget, int32_t lValue)
 		VOLUME = lValue;
 	}
 
-
-
-	/*
-    static char pcCanvasText[5];
-    static char pcSliderText[5];
-	*/
 }
 
 //*****************************************************************************
@@ -599,7 +593,6 @@ int main(void)
 
     //InitADC();
     InitSPI();
-    //GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4);
     int ui32Loop = 0;
 
     while(1)
@@ -607,15 +600,6 @@ int main(void)
         ui32Loop++;
         if(ui32Loop == 2000000)
         {
-			/*
-    		SSIDataPut(SSI3_BASE, 10);
-    		//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_3, 0);
-    		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
-    		SysCtlDelay(1000);
-    		while(SSIBusy(SSI3_BASE))
-    		{
-    			// wait
-    		}*/
     		//ReadTemp();
 			ui32Loop = 0;
 		}
