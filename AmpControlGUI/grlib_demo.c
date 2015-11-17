@@ -451,11 +451,11 @@ void Reset()
 	while(1)
 	{
 
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 224);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 239);
 		SSIDataPut(SSI3_BASE, 40);
 		//SysCtlDelay(128);
-		SysCtlDelay(180);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 240);
+		//SysCtlDelay(180);
+		//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 240);
 	}
 	/*
     g_RedLedOn = !g_RedLedOn;
