@@ -80,8 +80,8 @@ extern tCanvasWidget g_psPanels[];
 // Potentiometer Global Variables
 //
 //*****************************************************************************
-#define TONAL_CONTROL_RANGE 64
-#define VOLUME_CONTROL_RANGE 100
+#define TONAL_CONTROL_RANGE 127
+#define VOLUME_CONTROL_RANGE 127
 int32_t TWEETER = 32;
 int32_t MIDRANGE = 32;
 int32_t BASS = 32;
@@ -410,7 +410,6 @@ void OnButtonPress(tWidget *pWidget)
 //*****************************************************************************
 void OnSliderChange(tWidget *pWidget, int32_t lValue)
 {
-	int buffer = 0;
 	if(pWidget == (tWidget *)&g_psSliders[0]) // Tweeter
 	{
 		//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 239);
@@ -422,16 +421,22 @@ void OnSliderChange(tWidget *pWidget, int32_t lValue)
 
 	if(pWidget == (tWidget *)&g_psSliders[1]) // Midrange
 	{
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 208);
+		SSIDataPut(SSI3_BASE, lValue);
 		MIDRANGE = lValue;
 	}
 
 	if(pWidget == (tWidget *)&g_psSliders[2]) // Bass
 	{
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 176);
+		SSIDataPut(SSI3_BASE, lValue);
 		BASS = lValue;
 	}
 
 	if(pWidget == (tWidget *)&g_psSliders[4]) // Volume Control
 	{
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 112);
+		SSIDataPut(SSI3_BASE, lValue);
 		VOLUME = lValue;
 	}
 	SysCtlDelay(128);
