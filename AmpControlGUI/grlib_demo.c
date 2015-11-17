@@ -413,20 +413,9 @@ void OnSliderChange(tWidget *pWidget, int32_t lValue)
 
 	if(pWidget == (tWidget *)&g_psSliders[0]) // Tweeter
 	{
-
+		//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 239);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 224);
 		SSIDataPut(SSI3_BASE, lValue);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 128);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5, 128);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 128);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_7, 128);
-		SysCtlDelay(64);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
-		SysCtlDelay(64);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 128);
-		while(SSIBusy(SSI3_BASE))
-		{
-			// wait
-		}
 		TWEETER = lValue;
 	}
 
@@ -444,7 +433,8 @@ void OnSliderChange(tWidget *pWidget, int32_t lValue)
 	{
 		VOLUME = lValue;
 	}
-
+	SysCtlDelay(128);
+	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 240);
 }
 
 //*****************************************************************************
@@ -457,15 +447,17 @@ bool g_RedLedOn = false;
 bool onstate = true;
 void Reset()
 {
-	/*
+
 	while(1)
 	{
-		SSIDataPut(SSI3_BASE, 10);
-		//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_3, 0);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0);
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5, 0x00000080);
-		SysCtlDelay(1000);
-	}*/
+
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 224);
+		SSIDataPut(SSI3_BASE, 40);
+		//SysCtlDelay(128);
+		SysCtlDelay(180);
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 240);
+	}
+	/*
     g_RedLedOn = !g_RedLedOn;
     if(g_RedLedOn)
     {
@@ -474,7 +466,7 @@ void Reset()
     else
     {
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x00);
-    }
+    }*/
 }
 
 void InitADC()
@@ -484,7 +476,6 @@ void InitADC()
 	 GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_1);
 	 ADCSequenceConfigure(ADC1_BASE, 3, ADC_TRIGGER_PROCESSOR, 0);
 	 ADCSequenceStepConfigure(ADC1_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE | ADC_CTL_END);
-
 	 ADCSequenceEnable(ADC1_BASE, 3);
 	 ADCIntClear(ADC1_BASE, 3);
 }
