@@ -410,11 +410,12 @@ void OnButtonPress(tWidget *pWidget)
 //*****************************************************************************
 void OnSliderChange(tWidget *pWidget, int32_t lValue)
 {
-
+	int buffer = 0;
 	if(pWidget == (tWidget *)&g_psSliders[0]) // Tweeter
 	{
 		//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 239);
 		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 224);
+
 		SSIDataPut(SSI3_BASE, lValue);
 		TWEETER = lValue;
 	}
@@ -447,7 +448,7 @@ bool g_RedLedOn = false;
 bool onstate = true;
 void Reset()
 {
-
+/*
 	while(1)
 	{
 
@@ -457,7 +458,7 @@ void Reset()
 		//SysCtlDelay(180);
 		//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 240);
 	}
-	/*
+	*/
     g_RedLedOn = !g_RedLedOn;
     if(g_RedLedOn)
     {
@@ -466,7 +467,7 @@ void Reset()
     else
     {
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x00);
-    }*/
+    }
 }
 
 void InitADC()
@@ -533,9 +534,6 @@ int main(void)
     defined(TARGET_IS_TM4C129_RA2)
     uint32_t ui32SysClock;
 #endif
-    uint32_t pui32ADC0Value[1];
-    uint32_t ui32TempValueF;
-    uint32_t i = 0;
     //
     // Set the clocking to run at 20 MHz (200 MHz / 10) using the PLL.  When
     // using the ADC, you must either use the PLL or supply a 16 MHz clock
