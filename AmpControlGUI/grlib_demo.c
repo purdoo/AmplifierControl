@@ -528,11 +528,35 @@ int main(void)
     tContext sContext;
     tRectangle sRect;
 
+#if defined(TARGET_IS_TM4C129_RA0) ||                                         \
+    defined(TARGET_IS_TM4C129_RA1) ||                                         \
+    defined(TARGET_IS_TM4C129_RA2)
+    uint32_t ui32SysClock;
+#endif
+    uint32_t pui32ADC0Value[1];
+    uint32_t ui32TempValueF;
+    uint32_t i = 0;
+    //
+    // Set the clocking to run at 20 MHz (200 MHz / 10) using the PLL.  When
+    // using the ADC, you must either use the PLL or supply a 16 MHz clock
+    // source.
+#if defined(TARGET_IS_TM4C129_RA0) ||                                         \
+    defined(TARGET_IS_TM4C129_RA1) ||                                         \
+    defined(TARGET_IS_TM4C129_RA2)
+    ui32SysClock = SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
+                                       SYSCTL_OSC_MAIN |
+                                       SYSCTL_USE_PLL |
+                                       SYSCTL_CFG_VCO_480), 20000000);
+#else
+    SysCtlClockSet(SYSCTL_SYSDIV_10 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
+                   SYSCTL_XTAL_16MHZ);
+#endif
+
     FPUEnable();
     FPULazyStackingEnable();
 
     // Set the clock to 40Mhz derived from the PLL and the external oscillator
-    SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ | SYSCTL_OSC_MAIN);
+    //SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ | SYSCTL_OSC_MAIN);
 
     // Reset Button Bindings
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
