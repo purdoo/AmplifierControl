@@ -364,41 +364,93 @@ void OnButtonPress(tWidget *pWidget)
     if(pWidget == (tWidget *)&g_psPushButtons[0]) // Pop
     {
     	// change the value of sliders, which triggers a redraw
-    	g_psSliders[0].i32Value = 55;
-    	g_psSliders[1].i32Value = 45;
-    	g_psSliders[2].i32Value = 30;
+    	g_psSliders[0].i32Value = 90;
+    	g_psSliders[1].i32Value = 75;
+    	g_psSliders[2].i32Value = 60;
 
     	// change the value of global variables used by other functions
 		TWEETER = 55;
 		MIDRANGE = 45;
     	BASS = 30;
+
+    	// Write appropriate SPI Data
+    	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 224);
+    	SSIDataPut(SSI3_BASE, 90);
+    	SysCtlDelay(128);
+    	//
+    	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 208);
+    	SSIDataPut(SSI3_BASE, 75);
+    	SysCtlDelay(128);
+    	//
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 176);
+		SSIDataPut(SSI3_BASE, 60);
+		SysCtlDelay(128);
+
     }
     if(pWidget == (tWidget *)&g_psPushButtons[1]) // Jazz
     {
-    	g_psSliders[0].i32Value = 25;
-    	g_psSliders[1].i32Value = 40;
-    	g_psSliders[2].i32Value = 30;
+    	g_psSliders[0].i32Value = 60;
+    	g_psSliders[1].i32Value = 90;
+    	g_psSliders[2].i32Value = 70;
     	TWEETER = 25;
 		MIDRANGE = 40;
     	BASS = 30;
+
+    	// Write appropriate SPI Data
+    	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 224);
+    	SSIDataPut(SSI3_BASE, 60);
+    	SysCtlDelay(128);
+    	//
+    	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 208);
+    	SSIDataPut(SSI3_BASE, 90);
+    	SysCtlDelay(128);
+    	//
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 176);
+		SSIDataPut(SSI3_BASE, 70);
+		SysCtlDelay(128);
     }
     if(pWidget == (tWidget *)&g_psPushButtons[2]) // Rock
     {
-    	g_psSliders[0].i32Value = 35;
-    	g_psSliders[1].i32Value = 40;
-    	g_psSliders[2].i32Value = 35;
+    	g_psSliders[0].i32Value = 85;
+    	g_psSliders[1].i32Value = 85;
+    	g_psSliders[2].i32Value = 85;
     	TWEETER = 35;
 		MIDRANGE = 40;
     	BASS = 35;
+
+    	// Write appropriate SPI Data
+    	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 224);
+    	SSIDataPut(SSI3_BASE, 85);
+    	SysCtlDelay(128);
+    	//
+    	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 208);
+    	SSIDataPut(SSI3_BASE, 85);
+    	SysCtlDelay(128);
+    	//
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 176);
+		SSIDataPut(SSI3_BASE, 85);
+		SysCtlDelay(128);
     }
     if(pWidget == (tWidget *)&g_psPushButtons[3]) // Drum + Bass
     {
-    	g_psSliders[0].i32Value = 37;
-    	g_psSliders[1].i32Value = 37;
-    	g_psSliders[2].i32Value = 50;
+    	g_psSliders[0].i32Value = 60;
+    	g_psSliders[1].i32Value = 60;
+    	g_psSliders[2].i32Value = 110;
     	TWEETER = 37;
 		MIDRANGE = 37;
     	BASS = 50;
+    	// Write appropriate SPI Data
+    	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 224);
+    	SSIDataPut(SSI3_BASE, 60);
+    	SysCtlDelay(128);
+    	//
+    	GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 208);
+    	SSIDataPut(SSI3_BASE, 60);
+    	SysCtlDelay(128);
+    	//
+		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 176);
+		SSIDataPut(SSI3_BASE, 110);
+		SysCtlDelay(128);
     }
 
 }
@@ -453,17 +505,6 @@ bool g_RedLedOn = false;
 bool onstate = true;
 void Reset()
 {
-/*
-	while(1)
-	{
-
-		GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 239);
-		SSIDataPut(SSI3_BASE, 40);
-		//SysCtlDelay(128);
-		//SysCtlDelay(180);
-		//GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 240);
-	}
-	*/
     g_RedLedOn = !g_RedLedOn;
     if(g_RedLedOn)
     {
@@ -508,12 +549,12 @@ void ReadTemp()
 	{
 		WidgetPaint((tWidget *)&g_psPushButtonIndicators[3]);
 	}
-	/*
+
 	if(g_ulPanel == 1)
 	{
-		g_psSliders[3].i32Value = celsius;
+		g_psSliders[3].i32Value = rounded;
 		WidgetPaint((tWidget *)&g_psSliders[3]);
-	}*/
+	}
 }
 
 void InitSPI()
@@ -609,7 +650,7 @@ int main(void)
     // Issue the initial paint request to the widgets.
     WidgetPaint(WIDGET_ROOT);
 
-    //InitADC();
+    InitADC();
     InitSPI();
     int ui32Loop = 0;
 
@@ -618,7 +659,7 @@ int main(void)
         ui32Loop++;
         if(ui32Loop == 2000000)
         {
-    		//ReadTemp();
+    		ReadTemp();
 			ui32Loop = 0;
 		}
         WidgetMessageQueueProcess();
